@@ -1,70 +1,63 @@
-#include "BinaryMessage.hpp"
-#include <iostream>
+#include "BinaryMessageFactory.hpp"
+#include <nlohmann/json.hpp>
 #include <fstream>
-#include <iomanip>
-#include <filesystem>
+#include <iostream>
 
-std::filesystem::path find_config_file() {
-    // First try current directory
-    std::filesystem::path current_dir_config = "sample_config.json";
-    if (std::filesystem::exists(current_dir_config)) {
-        return current_dir_config;
-    }
-    
-    // Then try examples directory
-    std::filesystem::path examples_config = std::filesystem::current_path() / ".." / "examples" / "sample_config.json";
-    if (std::filesystem::exists(examples_config)) {
-        return examples_config;
-    }
-    
-    throw std::runtime_error("Could not find sample_config.json in current directory or examples directory");
-}
+using namespace BinaryMessageLibrary;
 
 int main() {
     try {
-        // Find and load configuration file
-        std::filesystem::path config_path = find_config_file();
-        std::ifstream config_file(config_path);
-        if (!config_file.is_open()) {
-            throw std::runtime_error("Could not open configuration file: " + config_path.string());
-        }
-        
+        // Load message definitions from file
+        std::ifstream configFile("message_definitions.json");
         nlohmann::json config;
-        config_file >> config;
+        configFile >> config;
 
-        // Create message configuration
-        BinaryMessage::MessageConfig message_config(config);
+        // Create factory with the configuration
+        BinaryMessageFactory factory(config);
 
-        // Create a message
-        BinaryMessage::BinaryMessage message(message_config);
-
-        // Set some values
-        message.setField("status", 2);
-        message.setField("temperature", -123);
-        message.setField("pressure", 2047);
-        message.setField("flags", 0xAA);
-
-        // Pack the message
-        auto buffer = message.pack();
-
-        // Print the packed buffer
-        std::cout << "Packed buffer: ";
-        for (uint8_t byte : buffer) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') 
-                      << static_cast<int>(byte) << " ";
+        // Print available message types
+        std::cout << "Available message types:" << std::endl;
+        for (const auto& type : factory.getMessageTypes()) {
+            std::cout << "  - " << type << std::endl;
         }
-        std::cout << std::dec << std::endl;
+        std::cout << std::endl;
 
-        // Create a new message and unpack
-        BinaryMessage::BinaryMessage unpacked_message(message_config);
-        unpacked_message.unpack(buffer);
+        // Create and use a status message
+        auto statusMsg = factory.createMessage("status_message");
+        statusMsg->setField("device_id", 42);
+        statusMsg->setField("status_code", 3);
+        statusMsg->setField("error_code", 0);
+        
+        std::cout << "Status Message:" << std::endl;
+        std::cout << "  Device ID: " << statusMsg->getField("device_id") << std::endl;
+        std::cout << "  Status Code: " << statusMsg->getField("status_code") << std::endl;
+        std::cout << "  Error Code: " << statusMsg->getField("error_code") << std::endl;
+        std::cout << std::endl;
 
-        // Print unpacked values
-        std::cout << "\nUnpacked values:" << std::endl;
-        std::cout << "Status: " << unpacked_message.getField("status") << std::endl;
-        std::cout << "Temperature: " << unpacked_message.getField("temperature") << std::endl;
-        std::cout << "Pressure: " << unpacked_message.getField("pressure") << std::endl;
-        std::cout << "Flags: 0x" << std::hex << unpacked_message.getField("flags") << std::dec << std::endl;
+        // Create and use a sensor data message
+        auto sensorMsg = factory.createMessage("sensor_data");
+        sensorMsg->setField("sensor_id", 15);
+        sensorMsg->setField("temperature", -125);  // -12.5°C
+        sensorMsg->setField("humidity", 75);
+        sensorMsg->setField("battery_level", 12);
+        
+        std::cout << "Sensor Data:" << std::endl;
+        std::cout << "  Sensor ID: " << sensorMsg->getField("sensor_id") << std::endl;
+        std::cout << "  Temperature: " << sensorMsg->getField("temperature") << " (0.1°C)" << std::endl;
+        std::cout << "  Humidity: " << sensorMsg->getField("humidity") << "%" << std::endl;
+        std::cout << "  Battery Level: " << sensorMsg->getField("battery_level") << std::endl;
+        std::cout << std::endl;
+
+        // Demonstrate packing and unpacking
+        auto buffer = sensorMsg->pack();
+        auto unpackedMsg = factory.createMessage("sensor_data");
+        unpackedMsg->unpack(buffer);
+        
+        std::cout << "Unpacked Sensor Data:" << std::endl;
+        std::cout << "  Sensor ID: " << unpackedMsg->getField("sensor_id") << std::endl;
+        std::cout << "  Temperature: " << unpackedMsg->getField("temperature") << " (0.1°C)" << std::endl;
+        std::cout << "  Humidity: " << unpackedMsg->getField("humidity") << "%" << std::endl;
+        std::cout << "  Battery Level: " << unpackedMsg->getField("battery_level") << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

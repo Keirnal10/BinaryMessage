@@ -1,8 +1,8 @@
-#include "BinaryMessage.hpp"
+#include "MessageConfig.hpp"
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-using namespace BinaryMessage;
+using namespace BinaryMessageLibrary;
 
 class MessageConfigTest : public ::testing::Test {
 protected:

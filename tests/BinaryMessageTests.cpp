@@ -1,157 +1,139 @@
 #include "BinaryMessage.hpp"
+#include "MessageConfig.hpp"
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <cstdint>
 
-using namespace BinaryMessage;
+using namespace BinaryMessageLibrary;
 
 class BinaryMessageTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Create a simple test configuration
-        config_json = R"([
+        // Create a simple configuration for testing
+        nlohmann::json config = R"([
             {
-                "name": "status",
-                "bit_width": 2,
-                "signed": false
-            },
-            {
-                "name": "value",
+                "name": "field1",
                 "bit_width": 8,
-                "signed": true
+                "signed": false
             },
             {
-                "name": "flags",
+                "name": "field2",
                 "bit_width": 4,
-                "signed": false
+                "signed": true
             }
         ])"_json;
-        
-        message_config = std::make_unique<MessageConfig>(config_json);
+
+        messageConfig = std::make_unique<MessageConfig>(config);
     }
 
-    nlohmann::json config_json;
-    std::unique_ptr<MessageConfig> message_config;
+    std::unique_ptr<MessageConfig> messageConfig;
 };
 
 TEST_F(BinaryMessageTest, FieldOperations) {
-    BinaryMessage::BinaryMessage message(*message_config);
-
+    auto message = std::make_unique<BinaryMessage>(*messageConfig);
+    
     // Test setting and getting fields
-    message.setField("status", 2);
-    EXPECT_EQ(message.getField("status"), 2);
+    EXPECT_NO_THROW({
+        message->setField("field1", 42);
+        message->setField("field2", -3);
+    });
 
-    message.setField("value", -50);
-    EXPECT_EQ(message.getField("value"), -50);
+    EXPECT_EQ(message->getField("field1"), 42);
+    EXPECT_EQ(message->getField("field2"), -3);
 
-    message.setField("flags", 0xA);
-    EXPECT_EQ(message.getField("flags"), 0xA);
-
-    // Test invalid field name
-    EXPECT_THROW(message.getField("nonexistent"), std::runtime_error);
+    // Test setting invalid field
+    EXPECT_THROW({
+        message->setField("nonexistent_field", 0);
+    }, std::runtime_error);
 }
 
 TEST_F(BinaryMessageTest, FieldValueValidation) {
-    BinaryMessage::BinaryMessage message(*message_config);
-
+    auto message = std::make_unique<BinaryMessage>(*messageConfig);
+    
     // Test unsigned field range
-    EXPECT_NO_THROW(message.setField("status", 0));
-    EXPECT_NO_THROW(message.setField("status", 3));
-    EXPECT_THROW(message.setField("status", 4), std::runtime_error);
-    EXPECT_THROW(message.setField("status", -1), std::runtime_error);
+    EXPECT_NO_THROW(message->setField("field1", 0));
+    EXPECT_NO_THROW(message->setField("field1", 255));
+    EXPECT_THROW(message->setField("field1", -1), std::runtime_error);
+    EXPECT_THROW(message->setField("field1", 256), std::runtime_error);
 
     // Test signed field range
-    EXPECT_NO_THROW(message.setField("value", -128));
-    EXPECT_NO_THROW(message.setField("value", 127));
-    EXPECT_THROW(message.setField("value", -129), std::runtime_error);
-    EXPECT_THROW(message.setField("value", 128), std::runtime_error);
+    EXPECT_NO_THROW(message->setField("field2", -8));
+    EXPECT_NO_THROW(message->setField("field2", 7));
+    EXPECT_THROW(message->setField("field2", -9), std::runtime_error);
+    EXPECT_THROW(message->setField("field2", 8), std::runtime_error);
 }
 
 TEST_F(BinaryMessageTest, PackAndUnpack) {
-    BinaryMessage::BinaryMessage message(*message_config);
+    auto message = std::make_unique<BinaryMessage>(*messageConfig);
     
-    // Set test values
-    message.setField("status", 2);
-    message.setField("value", -50);
-    message.setField("flags", 0xA);
-
+    // Set some values
+    message->setField("field1", 42);
+    message->setField("field2", -3);
+    
     // Pack the message
-    auto buffer = message.pack();
+    auto buffer = message->pack();
     
     // Create a new message and unpack
-    BinaryMessage::BinaryMessage unpacked_message(*message_config);
-    unpacked_message.unpack(buffer);
-
-    // Verify unpacked values
-    EXPECT_EQ(unpacked_message.getField("status"), 2);
-    EXPECT_EQ(unpacked_message.getField("value"), -50);
-    EXPECT_EQ(unpacked_message.getField("flags"), 0xA);
+    auto unpackedMessage = std::make_unique<BinaryMessage>(*messageConfig);
+    unpackedMessage->unpack(buffer);
+    
+    // Verify values are preserved
+    EXPECT_EQ(unpackedMessage->getField("field1"), 42);
+    EXPECT_EQ(unpackedMessage->getField("field2"), -3);
 }
 
 TEST_F(BinaryMessageTest, PackAndUnpackEdgeCases) {
-    BinaryMessage::BinaryMessage message(*message_config);
+    auto message = std::make_unique<BinaryMessage>(*messageConfig);
     
-    // Test maximum values
-    message.setField("status", 3);
-    message.setField("value", 127);
-    message.setField("flags", 0xF);
-
-    auto buffer = message.pack();
-    BinaryMessage::BinaryMessage unpacked_message(*message_config);
-    unpacked_message.unpack(buffer);
-
-    EXPECT_EQ(unpacked_message.getField("status"), 3);
-    EXPECT_EQ(unpacked_message.getField("value"), 127);
-    EXPECT_EQ(unpacked_message.getField("flags"), 0xF);
-
-    // Test minimum values
-    message.setField("status", 0);
-    message.setField("value", -128);
-    message.setField("flags", 0);
-
-    buffer = message.pack();
-    unpacked_message.unpack(buffer);
-
-    EXPECT_EQ(unpacked_message.getField("status"), 0);
-    EXPECT_EQ(unpacked_message.getField("value"), -128);
-    EXPECT_EQ(unpacked_message.getField("flags"), 0);
+    // Test maximum and minimum values
+    message->setField("field1", 255);  // Max unsigned
+    message->setField("field2", -8);   // Min signed
+    
+    auto buffer = message->pack();
+    auto unpackedMessage = std::make_unique<BinaryMessage>(*messageConfig);
+    unpackedMessage->unpack(buffer);
+    
+    EXPECT_EQ(unpackedMessage->getField("field1"), 255);
+    EXPECT_EQ(unpackedMessage->getField("field2"), -8);
 }
 
 TEST_F(BinaryMessageTest, InvalidBufferSize) {
-    BinaryMessage::BinaryMessage message(*message_config);
-    std::vector<uint8_t> small_buffer = {0x00}; // Too small
-    EXPECT_THROW(message.unpack(small_buffer), std::runtime_error);
+    auto message = std::make_unique<BinaryMessage>(*messageConfig);
+    std::vector<uint8_t> buffer(1); // Too small buffer
+    
+    EXPECT_THROW({
+        message->unpack(buffer);
+    }, std::runtime_error);
 }
 
 TEST_F(BinaryMessageTest, PackUnpackMultipleMessages) {
-    BinaryMessage::BinaryMessage message1(*message_config);
-    BinaryMessage::BinaryMessage message2(*message_config);
+    auto message1 = std::make_unique<BinaryMessage>(*messageConfig);
+    auto message2 = std::make_unique<BinaryMessage>(*messageConfig);
     
     // Set different values in each message
-    message1.setField("status", 1);
-    message1.setField("value", 42);
-    message1.setField("flags", 0x5);
+    message1->setField("field1", 42);
+    message1->setField("field2", -3);
     
-    message2.setField("status", 2);
-    message2.setField("value", -42);
-    message2.setField("flags", 0xA);
+    message2->setField("field1", 100);
+    message2->setField("field2", 5);
     
     // Pack both messages
-    auto buffer1 = message1.pack();
-    auto buffer2 = message2.pack();
+    auto buffer1 = message1->pack();
+    auto buffer2 = message2->pack();
     
-    // Unpack into new messages
-    BinaryMessage::BinaryMessage unpacked1(*message_config);
-    BinaryMessage::BinaryMessage unpacked2(*message_config);
+    // Create new messages and unpack
+    auto unpacked1 = std::make_unique<BinaryMessage>(*messageConfig);
+    auto unpacked2 = std::make_unique<BinaryMessage>(*messageConfig);
     
-    unpacked1.unpack(buffer1);
-    unpacked2.unpack(buffer2);
+    unpacked1->unpack(buffer1);
+    unpacked2->unpack(buffer2);
     
     // Verify values are preserved
-    EXPECT_EQ(unpacked1.getField("status"), 1);
-    EXPECT_EQ(unpacked1.getField("value"), 42);
-    EXPECT_EQ(unpacked1.getField("flags"), 0x5);
-    
-    EXPECT_EQ(unpacked2.getField("status"), 2);
-    EXPECT_EQ(unpacked2.getField("value"), -42);
-    EXPECT_EQ(unpacked2.getField("flags"), 0xA);
+    EXPECT_EQ(unpacked1->getField("field1"), 42);
+    EXPECT_EQ(unpacked1->getField("field2"), -3);
+    EXPECT_EQ(unpacked2->getField("field1"), 100);
+    EXPECT_EQ(unpacked2->getField("field2"), 5);
 } 

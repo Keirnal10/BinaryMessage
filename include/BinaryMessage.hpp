@@ -1,10 +1,13 @@
 #pragma once
 
-#include "MessageConfig.hpp"
 #include <vector>
 #include <string>
+#include <cstdint>
+#include <memory>
+#include "FieldConfig.hpp"
+#include "MessageConfig.hpp"
 
-namespace BinaryMessage {
+namespace BinaryMessageLibrary {
 
 /**
  * @brief Class for handling binary messages with configurable fields.
@@ -77,6 +80,16 @@ private:
     std::vector<int64_t> field_values_;
     
     /**
+     * @brief Gets the index of a field in the field_values_ vector.
+     * 
+     * @param name The name of the field to find.
+     * @return size_t The index of the field.
+     * 
+     * @throws std::runtime_error if the field name is invalid.
+     */
+    size_t getFieldOffset(const std::string& name) const;
+
+    /**
      * @brief Validates that a field name exists in the configuration.
      * 
      * @param name The field name to validate.
@@ -96,4 +109,4 @@ private:
     void validateFieldValue(const std::string& name, int64_t value) const;
 };
 
-} // namespace BinaryMessage 
+} // namespace BinaryMessageLibrary 

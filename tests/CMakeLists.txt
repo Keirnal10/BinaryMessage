@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1
+    GIT_TAG v1.14.0
 )
 
 # Set runtime library for Google Test
@@ -14,19 +14,20 @@ endif()
 FetchContent_MakeAvailable(googletest)
 
 # Create test executable
-add_executable(binary_message_tests
+add_executable(BinaryMessageTests
     test_main.cpp
     BinaryMessageTests.cpp
+    BinaryMessageFactoryTests.cpp
     MessageConfigTests.cpp
 )
 
 # Link test executable with Google Test and our library
-target_link_libraries(binary_message_tests
+target_link_libraries(BinaryMessageTests
     PRIVATE
-        GTest::gtest_main
         BinaryMessageLibrary
+        GTest::gtest_main
 )
 
 # Add test executable to CTest
 include(GoogleTest)
-gtest_discover_tests(binary_message_tests) 
+gtest_discover_tests(BinaryMessageTests) 

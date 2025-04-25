@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-namespace BinaryMessage {
+namespace BinaryMessageLibrary {
 
 /**
  * @brief Configuration class for a binary message layout.
@@ -79,8 +79,8 @@ public:
     bool hasField(const std::string& name) const;
 
 private:
-    std::vector<FieldConfig> fields;
-    size_t totalBits;
+    std::vector<FieldConfig> fields_;
+    size_t total_bits_;
 
     /**
      * @brief Validates the JSON configuration.
@@ -97,4 +97,4 @@ private:
     void calculateTotalBits();
 };
 
-} // namespace BinaryMessage 
+} // namespace BinaryMessageLibrary 

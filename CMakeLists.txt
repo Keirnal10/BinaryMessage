@@ -18,10 +18,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-# Add library
-add_library(BinaryMessageLibrary
+# Add source files
+set(SOURCES
     src/BinaryMessage.cpp
     src/MessageConfig.cpp
+    src/BinaryMessageFactory.cpp
+    src/FieldConfig.cpp
+)
+
+# Add library
+add_library(BinaryMessageLibrary
+    ${SOURCES}
 )
 
 # Add public headers

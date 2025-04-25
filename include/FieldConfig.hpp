@@ -3,7 +3,7 @@
 #include <string>
 #include <cstdint>
 
-namespace BinaryMessage {
+namespace BinaryMessageLibrary {
 
 /**
  * @brief Configuration class for a single field in a binary message.
@@ -76,10 +76,38 @@ public:
      */
     int64_t getMinValue() const;
 
+    /**
+     * @brief Gets the name of the field.
+     * 
+     * This is an alternative accessor for the field name.
+     * 
+     * @return const std::string& The field name.
+     */
+    const std::string& name() const { return name_; }
+
+    /**
+     * @brief Gets the bit width of the field.
+     * 
+     * This is an alternative accessor for the field's bit width.
+     * 
+     * @return uint8_t The number of bits allocated for this field.
+     */
+    uint8_t bit_width() const { return bit_width_; }
+
+    /**
+     * @brief Checks if the field is signed.
+     * 
+     * This is an alternative accessor for the field's signed status.
+     * 
+     * @return true if the field represents a signed value.
+     * @return false if the field represents an unsigned value.
+     */
+    bool is_signed() const { return is_signed_; }
+
 private:
-    std::string name;
-    uint8_t bitWidth;
-    bool signedField;
+    std::string name_;
+    uint8_t bit_width_;
+    bool is_signed_;
 };
 
-} // namespace BinaryMessage 
+} // namespace BinaryMessageLibrary 

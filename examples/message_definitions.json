@@ -1,0 +1,58 @@
+{
+    "status_message": [
+        {
+            "name": "device_id",
+            "bit_width": 8,
+            "signed": false
+        },
+        {
+            "name": "status_code",
+            "bit_width": 4,
+            "signed": false
+        },
+        {
+            "name": "error_code",
+            "bit_width": 4,
+            "signed": false
+        }
+    ],
+    "sensor_data": [
+        {
+            "name": "sensor_id",
+            "bit_width": 6,
+            "signed": false
+        },
+        {
+            "name": "temperature",
+            "bit_width": 10,
+            "signed": true
+        },
+        {
+            "name": "humidity",
+            "bit_width": 8,
+            "signed": false
+        },
+        {
+            "name": "battery_level",
+            "bit_width": 4,
+            "signed": false
+        }
+    ],
+    "control_command": [
+        {
+            "name": "command_type",
+            "bit_width": 4,
+            "signed": false
+        },
+        {
+            "name": "parameter",
+            "bit_width": 12,
+            "signed": true
+        },
+        {
+            "name": "flags",
+            "bit_width": 8,
+            "signed": false
+        }
+    ]
+} 
