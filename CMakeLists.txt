@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
-cmake_policy(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5...3.10)
+cmake_policy(SET CMP0048 NEW)
+cmake_policy(SET CMP0077 NEW)
 
 project(BinaryMessageLibrary VERSION 1.0.0 LANGUAGES CXX)
 
