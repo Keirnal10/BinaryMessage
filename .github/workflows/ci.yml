@@ -17,8 +17,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up CMake
-      uses: actions/setup-cmake@v4
+    - name: Install CMake (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake
+
+    - name: Install CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 
     - name: Configure CMake
       run: |
