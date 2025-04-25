@@ -1,0 +1,22 @@
+[
+    {
+        "name": "status",
+        "bit_width": 2,
+        "signed": false
+    },
+    {
+        "name": "temperature",
+        "bit_width": 10,
+        "signed": true
+    },
+    {
+        "name": "pressure",
+        "bit_width": 12,
+        "signed": false
+    },
+    {
+        "name": "flags",
+        "bit_width": 8,
+        "signed": false
+    }
+] 

@@ -1,0 +1,2 @@
+add_executable(binary_message_example main.cpp)
+target_link_libraries(binary_message_example BinaryMessageLibrary) 
