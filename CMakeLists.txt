@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.5...3.10)
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0077 NEW)
+cmake_minimum_required(VERSION 3.10)
+cmake_policy(VERSION 3.10)
 
 project(BinaryMessageLibrary VERSION 1.0.0 LANGUAGES CXX)
 
@@ -17,7 +16,7 @@ include(FetchContent)
 FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.2
+    GIT_TAG v3.11.3
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
