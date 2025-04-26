@@ -39,4 +39,13 @@ jobs:
     - name: Run Tests
       run: |
         cd ${{github.workspace}}/build
-        ctest -C ${{matrix.build_type}} --output-on-failure --parallel 4 --timeout 30 
+        ctest -C ${{matrix.build_type}} --output-on-failure --parallel 4 --timeout 30
+
+  pull_request_tests:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Test Results
+      run: |
+        echo "All tests passed in the build job. Pull request is ready for review." 
